@@ -1,9 +1,7 @@
 # Music Visualizer
 
-This is a simple music player & visualizer (graph through FFT)
+This is a simple music player & visualizer written in Java and using the Minim audio library.
 
-Currently the visualization portion of the code is incomplete
+![s1](screenshots/s1.png)
+![s2](screenshots/s2.png)
 
-In addition, the player currently doesn't allow for choice of song (it will perpetually play Furthest Thing by Drake)
-
-Nobody should ever use this

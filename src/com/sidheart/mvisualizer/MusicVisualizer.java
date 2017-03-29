@@ -25,6 +25,11 @@ import java.awt.SystemColor;
 
 public class MusicVisualizer extends JFrame {
 
+	Minim minim;
+	FFT fft;
+	AudioPlayer player;
+	int x = 200;
+	int y = 62;
 	private static final long serialVersionUID = -5468431429808172197L;
 
 	private JPanel contentPane;
@@ -45,22 +50,6 @@ public class MusicVisualizer extends JFrame {
 		});
 	}
 	
-    public class MyGraphics extends JComponent {
-
-		private static final long serialVersionUID = 9197032590874822717L;
-
-		MyGraphics() {
-            setPreferredSize(new Dimension(500, 100));
-        }
-
-        @Override
-        public void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            g.setColor(Color.RED);
-            g.fillRect(200, 62, 30, 10);
-        }
-    }
-
 	/**
 	 * Create the frame.
 	 */
@@ -73,23 +62,29 @@ public class MusicVisualizer extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
+		DrawPanel panel = new DrawPanel();
+		panel.setBackground(SystemColor.text);
+		//panel.add(new MyGraphics(fft, song));
+		contentPane.add(panel, BorderLayout.CENTER);
+		
 		// setup Minim resources
 		MinimHandler mh = new MinimHandler();
-		Minim minim = new Minim(mh);
+		minim = new Minim(mh);
 		String fp = "/home/milk/Music/Nothing_Was_the_Same/Furthest Thing.mp3";
-		AudioPlayer song = minim.loadFile(fp);
-		FFT fft = new FFT(song.bufferSize(), song.sampleRate());
+		player = minim.loadFile(fp);
+		fft = new FFT(player.bufferSize(), player.sampleRate());
 		
 		// define the play/pause button behavior on click
 		Button playButton = new Button("Play");
 		playButton.setBackground(UIManager.getColor("Button.background"));
 		playButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if(song.isPlaying()) {
-					song.pause();
+				if(player.isPlaying()) {
+					player.pause();
 					playButton.setLabel("Play");
 				} else {
-					song.play();
+					player.play();
+					panel.repaint();
 					playButton.setLabel("Pause");
 					/* TODO add in canvas FFT graph */
 				}
@@ -102,14 +97,11 @@ public class MusicVisualizer extends JFrame {
 		    @Override
 		    public void run()
 		    {
-		        song.close();
+		        player.close();
 		    }
 		});
 		
-		JPanel panel = new JPanel();
-		panel.setBackground(SystemColor.text);
-		panel.add(new MyGraphics());
-		contentPane.add(panel, BorderLayout.CENTER);
+		
 		
 		// add the play/pause button
 		contentPane.add(playButton, BorderLayout.SOUTH);
@@ -117,5 +109,26 @@ public class MusicVisualizer extends JFrame {
 		
 		contentPane.setBackground(Color.WHITE);
 		//contentPane.add(panel, BorderLayout.CENTER);
+
+	}
+	
+	class DrawPanel extends JPanel {
+		
+		public Dimension getPreferredSize() {
+            return new Dimension(500, 500);
+        }
+
+        @Override
+        public void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.setColor(Color.RED);
+            fft.forward(player.mix);
+            //g.fillRect(0, 200, 30, 10);
+            for(int i = 0; i < player.bufferSize(); i++) {
+                int b = (int) fft.getBand(i);
+                System.out.println(b);
+                g.fillRect(i*2, 200 - b,  30, 10);
+            }
+        }
 	}
 }
